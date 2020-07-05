@@ -4,30 +4,18 @@ const smarp = require("sharp");
 const User = require("../models/user");
 const { update } = require("../models/user");
 const auth = require("../middleware/auth.js");
+const { sendWelcomeMail, sendFeedbackMail } = require("../emails/account");
 const sharp = require("sharp");
 const router = new express.Router();
-
-// multer
-const upload = multer({
-	limits: {
-		fileSize: 1000000,
-	},
-	fileFilter(req, file, cb) {
-		if (!file.originalname.match(/\.(jpg|jpeg|png)/)) {
-			return cb(new Error("File must be a jpg,jpeg or png"));
-		}
-		cb(undefined, true);
-	},
-});
 
 router.post("/users", async (req, res) => {
 	const user = new User(req.body);
 	try {
 		const token = await user.generateAuthToken();
-		// await user.save();
+		sendWelcomeMail(user.email, user.name);
 		res.status(201).send({ user, token });
 	} catch (e) {
-		res.status(400).send(e);
+		res.status(400).send(e.message);
 	}
 });
 
@@ -89,11 +77,29 @@ router.patch("/users/me", auth, async (req, res) => {
 
 router.delete("/users/me", auth, async (req, res) => {
 	try {
+		const deletedUser = {
+			name: req.user.name,
+			email: req.user.email,
+		};
 		await req.user.remove();
+		sendFeedbackMail(deletedUser.email, deletedUser.name);
 		res.send(req.user);
 	} catch (e) {
 		res.status(500).send();
 	}
+});
+
+// multer
+const upload = multer({
+	limits: {
+		fileSize: 1000000,
+	},
+	fileFilter(req, file, cb) {
+		if (!file.originalname.match(/\.(jpg|jpeg|png)/)) {
+			return cb(new Error("File must be a jpg,jpeg or png"));
+		}
+		cb(undefined, true);
+	},
 });
 
 router.post(
