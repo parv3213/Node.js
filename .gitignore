@@ -116,3 +116,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 task-manager/config
+.DS_Store
