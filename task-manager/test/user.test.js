@@ -1,27 +1,10 @@
 require("dotenv").config({ path: "./config/test-dev.env" });
 const request = require("supertest");
-const jwt = require("jsonwebtoken");
-const mongoose = require("mongoose");
 const app = require("../src/app");
 const User = require("../src/models/user");
+const { userOneId, userOne, setupDatabase } = require("./fixtures/db");
 
-const userOneId = new mongoose.Types.ObjectId();
-const userOne = {
-	_id: userOneId,
-	name: "Mike",
-	email: "mike@example.com",
-	password: "56what!!",
-	tokens: [
-		{
-			token: jwt.sign({ _id: userOneId }, process.env.SECRET),
-		},
-	],
-};
-
-beforeEach(async () => {
-	await User.deleteMany();
-	await new User(userOne).save();
-});
+beforeEach(setupDatabase);
 
 test("Should signup a new user", async () => {
 	const response = await request(app)
@@ -86,4 +69,43 @@ test("Should delete account for user", async () => {
 
 test("Should not delete account for unauthenticate user", async () => {
 	await request(app).delete("/users/me").send().expect(401);
+});
+
+test("Should upload avatar image", async () => {
+	await request(app)
+		.post("/users/me/avatar")
+		.set("Authorization", "Bearer " + userOne.tokens[0].token)
+		.attach("avatar", "test/fixtures/a.png")
+		.expect(200);
+	const user = await User.findById(userOne._id);
+	expect(user.avatar).toEqual(expect.any(Buffer));
+});
+
+test("Update valid fields", async () => {
+	await request(app)
+		.patch("/users/me")
+		.set("Authorization", "Bearer " + userOne.tokens[0].token)
+		.send({
+			name: "Jack",
+			email: "jack@123.ca",
+			password: "Hellooadasd@2",
+			age: 23,
+		})
+		.expect(200);
+	const user = await User.findById(userOne._id);
+	expect(user.name).toBe("Jack");
+});
+
+test("Update In-valid user fields", async () => {
+	await request(app)
+		.patch("/users/me")
+		.set("Authorization", "Bearer " + userOne.tokens[0].token)
+		.send({
+			name: "Jack",
+			email: "jack@123.ca",
+			password: "Hellooadasd@2",
+			age: 23,
+			heelo: "adwwdaw",
+		})
+		.expect(400);
 });
