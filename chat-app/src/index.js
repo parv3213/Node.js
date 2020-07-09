@@ -2,7 +2,7 @@ const path = require("path");
 const http = require("http");
 const express = require("express");
 const socketio = require("socket.io");
-const { isPrimitive } = require("util");
+const Filter = require("bad-words");
 
 const app = express();
 const server = http.createServer(app); //Express does this automatically, we added this for refactoring
@@ -17,11 +17,16 @@ io.on("connection", (socket) => {
 	console.log("New Web-Socket Connection");
 	socket.emit("message", "Welcome");
 	socket.broadcast.emit("message", "A new user has joined!");
-	socket.on("sendMessage", (message) => {
+	socket.on("sendMessage", (message, callback) => {
+		const filter = new Filter();
+		if (filter.isProfane(message)) return callback("Profanity not allowed");
+
 		io.emit("message", message);
+		callback();
 	});
-	socket.on("sendLocation", (locaationObject) => {
+	socket.on("sendLocation", (locaationObject, callback) => {
 		io.emit("message", `https://www.google.com/maps/?q=${locaationObject.latitude},${locaationObject.longitude}`);
+		callback("Location shared!");
 	});
 	socket.on("disconnect", () => {
 		io.emit("message", "A user has left!");
