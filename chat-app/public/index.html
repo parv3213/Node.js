@@ -5,20 +5,52 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat App</title>
+  <link rel="icon" href="/img/favicon.png" type="image/x-icon">
+  <link rel="stylesheet" href="/css/styles.min.css">
 </head>
 
 <body>
-  <h1>Chat App</h1>
+  <div class="chat">
+    <div class="chat__sidebar"></div>
+    <div class="chat__main">
+      <div id="message" class="chat__messages"></div>
+      <div class="compose">
+        <form id="message-form">
+          <label for="input-message"></label>
+          <input type="text" id="input-message" name="message" placeholder="Your Message" autofocus>
+          <button type="submit">Submit</button>
+        </form>
+        <button id="send-location">Send Location</button>
+      </div>
 
-  <div>
-    <form id="message-form">
-      <label for="input-message"></label>
-      <input type="text" id="input-message" name="message" placeholder="Your Message">
-      <button type="submit">Submit</button>
-    </form>
-    <button id="send-location">Send Location</button>
+    </div>
   </div>
 
+
+  <script id="message-template" type="text/html">
+    <div class="message">
+      <p>
+        <span class="message__name">Some User Name</span>
+        <span class="message__meta">{{createdAt}}</span>
+      </p>
+      <p>{{message}}</p>
+    </div>
+  </script>
+
+  <script id="location-message-template" type="text/html">
+    <div class="message">
+      <p>
+        <span class="message__name">Some User Name</span>
+        <span class="message__meta">{{createdAt}}</span>
+      </p>
+     <p><a href="{{url}}">My Current location</a></p>
+    </div>
+  </script>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.0.1/mustache.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.4/qs.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/chat.js"></script>
 </body>
